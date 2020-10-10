@@ -2,7 +2,10 @@
 
 export const main =
   Reach.App(
-    {},
+    {
+      deployMode: 'firstMsg',
+      connectors: [ETH],
+    },
     [['Alice', { request: UInt,
                  info: Bytes }],
      [  'Bob', { want: Fun([UInt], Null),

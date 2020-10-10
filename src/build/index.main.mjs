@@ -13,7 +13,7 @@ export async function Alice(stdlib, ctc, interact) {
     
     const v4 = stdlib.eq(v3, stdlib.bigNumberify(0));
     stdlib.assert(v4, {
-      at: './index.rsh:13:25:after expr stmt semicolon',
+      at: './index.rsh:16:25:after expr stmt semicolon',
       fs: [],
       msg: 'pay amount correct',
       who: 'Alice' });
@@ -25,7 +25,7 @@ export async function Alice(stdlib, ctc, interact) {
   const v2 = txn1.from;
   const v4 = stdlib.eq(v3, stdlib.bigNumberify(0));
   stdlib.assert(v4, {
-    at: './index.rsh:13:25:after expr stmt semicolon',
+    at: './index.rsh:16:25:after expr stmt semicolon',
     fs: [],
     msg: 'pay amount correct',
     who: 'Alice' });
@@ -35,7 +35,7 @@ export async function Alice(stdlib, ctc, interact) {
   const v11 = txn2.from;
   const v13 = stdlib.eq(v12, v1);
   stdlib.assert(v13, {
-    at: './index.rsh:18:21:after expr stmt semicolon',
+    at: './index.rsh:21:21:after expr stmt semicolon',
     fs: [],
     msg: 'pay amount correct',
     who: 'Alice' });
@@ -49,7 +49,7 @@ export async function Alice(stdlib, ctc, interact) {
     
     const v21 = stdlib.eq(v20, stdlib.bigNumberify(0));
     stdlib.assert(v21, {
-      at: './index.rsh:23:22:after expr stmt semicolon',
+      at: './index.rsh:26:22:after expr stmt semicolon',
       fs: [],
       msg: 'pay amount correct',
       who: 'Alice' });
@@ -63,7 +63,7 @@ export async function Alice(stdlib, ctc, interact) {
   const v20 = txn3.value;
   const v21 = stdlib.eq(v20, stdlib.bigNumberify(0));
   stdlib.assert(v21, {
-    at: './index.rsh:23:22:after expr stmt semicolon',
+    at: './index.rsh:26:22:after expr stmt semicolon',
     fs: [],
     msg: 'pay amount correct',
     who: 'Alice' });
@@ -76,13 +76,13 @@ export async function Bob(stdlib, ctc, interact) {
   const v2 = txn1.from;
   const v4 = stdlib.eq(v3, stdlib.bigNumberify(0));
   stdlib.assert(v4, {
-    at: './index.rsh:13:25:after expr stmt semicolon',
+    at: './index.rsh:16:25:after expr stmt semicolon',
     fs: [],
     msg: 'pay amount correct',
     who: 'Bob' });
   stdlib.protect(stdlib.T_Null, await interact.want(v1), {
-    at: './index.rsh:17:22:application',
-    fs: ['at ./index.rsh:17:35:after expr stmt semicolon call to "function" (defined at: ./index.rsh:16:17:function exp)'],
+    at: './index.rsh:20:22:application',
+    fs: ['at ./index.rsh:20:35:after expr stmt semicolon call to "function" (defined at: ./index.rsh:19:17:function exp)'],
     msg: 'want',
     who: 'Bob' });
   
@@ -96,7 +96,7 @@ export async function Bob(stdlib, ctc, interact) {
     
     const v13 = stdlib.eq(v12, v1);
     stdlib.assert(v13, {
-      at: './index.rsh:18:21:after expr stmt semicolon',
+      at: './index.rsh:21:21:after expr stmt semicolon',
       fs: [],
       msg: 'pay amount correct',
       who: 'Bob' });
@@ -108,7 +108,7 @@ export async function Bob(stdlib, ctc, interact) {
   const v11 = txn2.from;
   const v13 = stdlib.eq(v12, v1);
   stdlib.assert(v13, {
-    at: './index.rsh:18:21:after expr stmt semicolon',
+    at: './index.rsh:21:21:after expr stmt semicolon',
     fs: [],
     msg: 'pay amount correct',
     who: 'Bob' });
@@ -117,543 +117,36 @@ export async function Bob(stdlib, ctc, interact) {
   const v20 = txn3.value;
   const v21 = stdlib.eq(v20, stdlib.bigNumberify(0));
   stdlib.assert(v21, {
-    at: './index.rsh:23:22:after expr stmt semicolon',
+    at: './index.rsh:26:22:after expr stmt semicolon',
     fs: [],
     msg: 'pay amount correct',
     who: 'Bob' });
   ;
   stdlib.protect(stdlib.T_Null, await interact.got(v19), {
-    at: './index.rsh:28:21:application',
-    fs: ['at ./index.rsh:28:31:after expr stmt semicolon call to "function" (defined at: ./index.rsh:27:17:function exp)'],
+    at: './index.rsh:31:21:application',
+    fs: ['at ./index.rsh:31:31:after expr stmt semicolon call to "function" (defined at: ./index.rsh:30:17:function exp)'],
     msg: 'got',
     who: 'Bob' });
   
   return; }
 
-const _ALGO = {
-  appApproval: `#pragma version 2
-  // Check that we're an App
-  txn TypeEnum
-  int appl
-  ==
-  bz revert
-  txn RekeyTo
-  global ZeroAddress
-  ==
-  bz revert
-  // Check that everyone's here
-  global GroupSize
-  int 4
-  >=
-  bz revert
-  // Check txnAppl (us)
-  txn GroupIndex
-  int 0
-  ==
-  bz revert
-  // Check txnFromHandler
-  int 0
-  gtxn 2 Sender
-  byte "{{m1}}"
-  ==
-  ||
-  gtxn 2 Sender
-  byte "{{m2}}"
-  ==
-  ||
-  gtxn 2 Sender
-  byte "{{m3}}"
-  ==
-  ||
-  bz revert
-  byte base64(cw==)
-  app_global_get
-  gtxna 2 Args 0
-  ==
-  bz revert
-  byte base64(bA==)
-  app_global_get
-  gtxna 2 Args 4
-  btoi
-  ==
-  bz revert
-  // Don't check anyone else, because Handler does
-  // Update state
-  byte base64(cw==)
-  gtxna 2 Args 1
-  app_global_put
-  byte base64(bA==)
-  global Round
-  app_global_put
-  byte base64(aA==)
-  gtxna 2 Args 2
-  btoi
-  app_global_put
-  byte base64(aA==)
-  app_global_get
-  bnz halted
-  txn OnCompletion
-  int NoOp
-  ==
-  bz revert
-  b done
-  halted:
-  txn OnCompletion
-  int DeleteApplication
-  ==
-  bz revert
-  b done
-  revert:
-  int 0
-  return
-  done:
-  int 1
-  return
-  `,
-  appApproval0: `#pragma version 2
-  // Check that we're an App
-  txn TypeEnum
-  int appl
-  ==
-  bz revert
-  txn RekeyTo
-  global ZeroAddress
-  ==
-  bz revert
-  txn Sender
-  byte "{{Deployer}}"
-  ==
-  bz revert
-  txn ApplicationID
-  bz init
-  global GroupSize
-  int 5
-  ==
-  bz revert
-  txn OnCompletion
-  int UpdateApplication
-  ==
-  bz revert
-  byte base64(cw==)
-  int 0
-  itob
-  keccak256
-  app_global_put
-  byte base64(bA==)
-  global Round
-  app_global_put
-  byte base64(aA==)
-  int 0
-  app_global_put
-  b done
-  init:
-  global GroupSize
-  int 1
-  ==
-  bz revert
-  txn OnCompletion
-  int NoOp
-  ==
-  bz revert
-  b done
-  revert:
-  int 0
-  return
-  done:
-  int 1
-  return
-  `,
-  appClear: `#pragma version 2
-  // We're alone
-  global GroupSize
-  int 1
-  ==
-  bz revert
-  // We're halted
-  byte base64(aA==)
-  app_global_get
-  int 1
-  ==
-  bz revert
-  b done
-  revert:
-  int 0
-  return
-  done:
-  int 1
-  return
-  `,
-  ctc: `#pragma version 2
-  // Check size
-  global GroupSize
-  int 4
-  >=
-  bz revert
-  // Check txnAppl
-  gtxn 0 TypeEnum
-  int appl
-  ==
-  bz revert
-  gtxn 0 ApplicationID
-  byte "{{ApplicationID}}"
-  btoi
-  ==
-  bz revert
-  // Don't check anything else, because app does
-  // Check us
-  txn TypeEnum
-  int pay
-  ==
-  bz revert
-  txn RekeyTo
-  global ZeroAddress
-  ==
-  bz revert
-  txn CloseRemainderTo
-  global ZeroAddress
-  ==
-  bz revert
-  txn GroupIndex
-  int 4
-  >=
-  bz revert
-  b done
-  revert:
-  int 0
-  return
-  done:
-  int 1
-  return
-  `,
-  steps: [null, `#pragma version 2
-  // Check txnAppl
-  gtxn 0 TypeEnum
-  int appl
-  ==
-  bz revert
-  gtxn 0 ApplicationID
-  byte "{{ApplicationID}}"
-  btoi
-  ==
-  bz revert
-  // Check txnToHandler
-  gtxn 1 TypeEnum
-  int pay
-  ==
-  bz revert
-  gtxn 1 Receiver
-  txn Sender
-  ==
-  bz revert
-  gtxn 1 Amount
-  gtxn 2 Fee
-  ==
-  bz revert
-  // Check txnToContract
-  gtxn 3 TypeEnum
-  int pay
-  ==
-  bz revert
-  gtxn 3 Receiver
-  byte "{{ContractAddr}}"
-  ==
-  bz revert
-  // Check txnFromHandler (us)
-  txn GroupIndex
-  int 2
-  ==
-  bz revert
-  txn TypeEnum
-  int pay
-  ==
-  bz revert
-  txn Amount
-  int 0
-  ==
-  bz revert
-  txn Receiver
-  gtxn 1 Sender
-  ==
-  bz revert
-  txn NumArgs
-  int 6
-  ==
-  bz revert
-  int 0
-  itob
-  keccak256
-  arg 0
-  ==
-  bz revert
-  // Run body
-  gtxn 3 Amount
-  arg 3
-  btoi
-  -
-  int 0
-  ==
-  bz revert
-  int 1
-  itob
-  gtxn 3 Sender
-  concat
-  arg 5
-  concat
-  keccak256
-  arg 1
-  ==
-  bz revert
-  arg 2
-  btoi
-  int 0
-  ==
-  bz revert
-  b done
-  // Check GroupSize
-  global GroupSize
-  int 4
-  ==
-  bz revert
-  arg 3
-  btoi
-  int 0
-  ==
-  bz revert
-  // Check time limits
-  revert:
-  int 0
-  return
-  done:
-  int 1
-  return
-  `, `#pragma version 2
-  // Check txnAppl
-  gtxn 0 TypeEnum
-  int appl
-  ==
-  bz revert
-  gtxn 0 ApplicationID
-  byte "{{ApplicationID}}"
-  btoi
-  ==
-  bz revert
-  // Check txnToHandler
-  gtxn 1 TypeEnum
-  int pay
-  ==
-  bz revert
-  gtxn 1 Receiver
-  txn Sender
-  ==
-  bz revert
-  gtxn 1 Amount
-  gtxn 2 Fee
-  ==
-  bz revert
-  // Check txnToContract
-  gtxn 3 TypeEnum
-  int pay
-  ==
-  bz revert
-  gtxn 3 Receiver
-  byte "{{ContractAddr}}"
-  ==
-  bz revert
-  // Check txnFromHandler (us)
-  txn GroupIndex
-  int 2
-  ==
-  bz revert
-  txn TypeEnum
-  int pay
-  ==
-  bz revert
-  txn Amount
-  int 0
-  ==
-  bz revert
-  txn Receiver
-  gtxn 1 Sender
-  ==
-  bz revert
-  txn NumArgs
-  int 7
-  ==
-  bz revert
-  int 1
-  itob
-  arg 5
-  concat
-  arg 6
-  concat
-  keccak256
-  arg 0
-  ==
-  bz revert
-  // Run body
-  gtxn 3 Amount
-  arg 3
-  btoi
-  -
-  arg 6
-  btoi
-  ==
-  bz revert
-  int 2
-  itob
-  arg 5
-  concat
-  arg 6
-  concat
-  keccak256
-  arg 1
-  ==
-  bz revert
-  arg 2
-  btoi
-  int 0
-  ==
-  bz revert
-  b done
-  // Check GroupSize
-  global GroupSize
-  int 4
-  ==
-  bz revert
-  arg 3
-  btoi
-  int 0
-  ==
-  bz revert
-  // Check time limits
-  revert:
-  int 0
-  return
-  done:
-  int 1
-  return
-  `, `#pragma version 2
-  // Check txnAppl
-  gtxn 0 TypeEnum
-  int appl
-  ==
-  bz revert
-  gtxn 0 ApplicationID
-  byte "{{ApplicationID}}"
-  btoi
-  ==
-  bz revert
-  // Check txnToHandler
-  gtxn 1 TypeEnum
-  int pay
-  ==
-  bz revert
-  gtxn 1 Receiver
-  txn Sender
-  ==
-  bz revert
-  gtxn 1 Amount
-  gtxn 2 Fee
-  ==
-  bz revert
-  // Check txnToContract
-  gtxn 3 TypeEnum
-  int pay
-  ==
-  bz revert
-  gtxn 3 Receiver
-  byte "{{ContractAddr}}"
-  ==
-  bz revert
-  // Check txnFromHandler (us)
-  txn GroupIndex
-  int 2
-  ==
-  bz revert
-  txn TypeEnum
-  int pay
-  ==
-  bz revert
-  txn Amount
-  int 0
-  ==
-  bz revert
-  txn Receiver
-  gtxn 1 Sender
-  ==
-  bz revert
-  txn NumArgs
-  int 8
-  ==
-  bz revert
-  gtxn 3 Sender
-  arg 5
-  ==
-  bz revert
-  int 2
-  itob
-  arg 5
-  concat
-  arg 6
-  concat
-  keccak256
-  arg 0
-  ==
-  bz revert
-  // Run body
-  gtxn 3 Amount
-  arg 3
-  btoi
-  -
-  int 0
-  ==
-  bz revert
-  gtxn 4 TypeEnum
-  int pay
-  ==
-  bz revert
-  gtxn 4 Receiver
-  arg 5
-  ==
-  bz revert
-  gtxn 4 Amount
-  arg 6
-  btoi
-  ==
-  bz revert
-  gtxn 4 Sender
-  byte "{{ContractAddr}}"
-  ==
-  bz revert
-  arg 2
-  btoi
-  int 1
-  ==
-  bz revert
-  b done
-  // Check GroupSize
-  global GroupSize
-  int 5
-  ==
-  bz revert
-  arg 3
-  btoi
-  gtxn 4 Fee
-  ==
-  bz revert
-  // Check time limits
-  revert:
-  int 0
-  return
-  done:
-  int 1
-  return
-  `],
-  unsupported: false };
 const _ETH = {
   ABI: `[
     {
-      "inputs": [],
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "v1",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct ReachContract.a1",
+          "name": "_a",
+          "type": "tuple"
+        }
+      ],
       "stateMutability": "payable",
       "type": "constructor"
     },
@@ -688,31 +181,6 @@ const _ETH = {
       ],
       "name": "e3",
       "type": "event"
-    },
-    {
-      "inputs": [
-        {
-          "components": [
-            {
-              "internalType": "uint256",
-              "name": "_last",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "v1",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct ReachContract.a1",
-          "name": "_a",
-          "type": "tuple"
-        }
-      ],
-      "name": "m1",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
     },
     {
       "inputs": [
@@ -780,9 +248,8 @@ const _ETH = {
       "type": "function"
     }
   ]`,
-  Bytecode: `0x608060405261001160004360a0610031565b60408051601f19818403018152919052805160209091012060005561003f565b918252602082015260400190565b6104818061004e6000396000f3fe6080604052600436106100345760003560e01c806303fcf1691461003957806321730c631461004e5780639cb54e4014610061575b600080fd5b61004c610047366004610335565b610074565b005b61004c61005c36600461035d565b61012f565b61004c61006f36600461034c565b610251565b604051610089906000908335906020016103cd565b6040516020818303038152906040528051906020012060001c600054146100af57600080fd5b34156100ba57600080fd5b7f3680e78b6fdf571695c81f108d81181ea63f50c100e6375e765b14bd7ac0adbb81602001356040516100ed91906103c4565b60405180910390a160014333836020013560405160200161011194939291906103db565b60408051601f19818403018152919052805160209091012060005550565b600281356101436040840160208501610307565b836040013560405160200161015b94939291906103db565b6040516020818303038152906040528051906020012060001c6000541461018157600080fd5b6101916040820160208301610307565b6001600160a01b0316336001600160a01b0316146101ae57600080fd5b34156101b957600080fd5b6101c96040820160208301610307565b6001600160a01b03166108fc82604001359081150290604051600060405180830381858888f19350505050158015610205573d6000803e3d6000fd5b507fc65a85ba7eeba425db1b78f7a7e675c7110ba1276d025effd7ccf97de4fb260a61023460608301836103ff565b604051610242929190610395565b60405180910390a16000805533ff5b600181356102656040840160208501610307565b836040013560405160200161027d94939291906103db565b6040516020818303038152906040528051906020012060001c600054146102a357600080fd5b806040013534146102b357600080fd5b6040517f9b31f9e88fd11f71bfbf93b0237bc9a0900b8479a307f60435e40543e383403590600090a16002436102ef6040840160208501610307565b836040013560405160200161011194939291906103db565b600060208284031215610318578081fd5b81356001600160a01b038116811461032e578182fd5b9392505050565b600060408284031215610346578081fd5b50919050565b600060608284031215610346578081fd5b60006020828403121561036e578081fd5b813567ffffffffffffffff811115610384578182fd5b82016080818503121561032e578182fd5b60006020825282602083015282846040840137818301604090810191909152601f909201601f19160101919050565b90815260200190565b918252602082015260400190565b93845260208401929092526001600160a01b03166040830152606082015260800190565b6000808335601e19843603018112610415578283fd5b83018035915067ffffffffffffffff82111561042f578283fd5b60200191503681900382131561044457600080fd5b925092905056fea264697066735822122061bb20c026c3c7c665337c4e6982876fbe209fd94045e75c6e65f5328b951a8e64736f6c63430007010033`,
-  deployMode: `DM_constructor` };
+  Bytecode: `0x60806040526040516104b43803806104b48339810160408190526100229161009e565b341561002d57600080fd5b80516040517f3680e78b6fdf571695c81f108d81181ea63f50c100e6375e765b14bd7ac0adbb9161005d916100da565b60405180910390a1805160405161007d91600191439133916020016100e3565b60408051601f19818403018152919052805160209091012060005550610107565b6000602082840312156100af578081fd5b604051602081016001600160401b03811182821017156100cd578283fd5b6040529151825250919050565b90815260200190565b93845260208401929092526001600160a01b03166040830152606082015260800190565b61039e806101166000396000f3fe6080604052600436106100295760003560e01c806321730c631461002e5780639cb54e4014610043575b600080fd5b61004161003c366004610291565b610056565b005b61004161005136600461027a565b610178565b6002813561006a604084016020850161024c565b836040013560405160200161008294939291906102f8565b6040516020818303038152906040528051906020012060001c600054146100a857600080fd5b6100b8604082016020830161024c565b6001600160a01b0316336001600160a01b0316146100d557600080fd5b34156100e057600080fd5b6100f0604082016020830161024c565b6001600160a01b03166108fc82604001359081150290604051600060405180830381858888f1935050505015801561012c573d6000803e3d6000fd5b507fc65a85ba7eeba425db1b78f7a7e675c7110ba1276d025effd7ccf97de4fb260a61015b606083018361031c565b6040516101699291906102c9565b60405180910390a16000805533ff5b6001813561018c604084016020850161024c565b83604001356040516020016101a494939291906102f8565b6040516020818303038152906040528051906020012060001c600054146101ca57600080fd5b806040013534146101da57600080fd5b6040517f9b31f9e88fd11f71bfbf93b0237bc9a0900b8479a307f60435e40543e383403590600090a1600243610216604084016020850161024c565b836040013560405160200161022e94939291906102f8565b60408051601f19818403018152919052805160209091012060005550565b60006020828403121561025d578081fd5b81356001600160a01b0381168114610273578182fd5b9392505050565b60006060828403121561028b578081fd5b50919050565b6000602082840312156102a2578081fd5b813567ffffffffffffffff8111156102b8578182fd5b820160808185031215610273578182fd5b60006020825282602083015282846040840137818301604090810191909152601f909201601f19160101919050565b93845260208401929092526001600160a01b03166040830152606082015260800190565b6000808335601e19843603018112610332578283fd5b83018035915067ffffffffffffffff82111561034c578283fd5b60200191503681900382131561036157600080fd5b925092905056fea2646970667358221220c6b8a158da5759c108c2edef5008138b8a96463c72195aed7e313753ebc6371b64736f6c63430007010033`,
+  deployMode: `DM_firstMsg` };
 
 export const _Connectors = {
-  ALGO: _ALGO,
   ETH: _ETH };
