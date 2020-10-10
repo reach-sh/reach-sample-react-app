@@ -11,7 +11,7 @@ npm install
 npm run start
 ```
 
-If you modify the contract, you must run the `compile-rsh` script:
+If you modify `src/index.rsh`, you must run the `compile-rsh` script:
 
 ```
 npm run compile-rsh
