@@ -1,6 +1,7 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import FundMe from './FundMe';
 import Alice from './Alice';
 import Bob from './Bob';
 
@@ -22,6 +23,7 @@ class App extends React.Component {
     return (
       <div className="App">
         <header className="App-header">
+          <FundMe />
           <img src={logo} className="App-logo" alt="logo" />
           <button
             style={{fontSize: '32px'}}
