@@ -344,7 +344,10 @@ class Alice extends React.Component {
         break;
       default:
         alice = (
-          <div>Sorry, Alice, something went wrong.</div>
+          <div>
+            Sorry, Alice, something went wrong.
+            Please refresh the page.
+          </div>
         );
     }
     return (
@@ -358,75 +361,115 @@ class Alice extends React.Component {
 class Bob extends React.Component {
   constructor(props) {
     super(props);
+    // Modes
+    // * RunBackend: runBackend
+    // * ApproveRequest
+    // * DisplayInfo
     this.state = {
-      acc: undefined,
-      ctc: undefined,
-      ctcInfo: undefined,
-      running: false,
-      completed: false,
-      attached: false,
-      secret: 'click Attach and pay Alice to find out her secret',
+      mode: 'RunBackend',
+      acc: props.acc,
+      // Set by RunBackend
+      ctcInfoStr: undefined,
+      // Set (async) by RunBackend
+      requestStandard: undefined,
+      info: undefined,
     };
   }
 
-  async componentDidMount() {
-    const acc = await reach.getDefaultAccount();
-    this.setState({acc});
+  ctcInfoStrChanged(ctcInfoStr) {
+    this.setState({ctcInfoStr});
   }
 
-  pastedInfo(e) {
-    // TODO: error handling
-    const ctcInfo = JSON.parse(e.currentTarget.value);
-    this.setState({ctcInfo});
-  }
+  async runBackend() {
+    const {acc, ctcInfoStr} = this.state;
+    const ctcInfo = JSON.parse(ctcInfoStr);
+    const ctc = acc.attach(backend, ctcInfo);
+    this.setState({mode: 'ApproveRequest'});
 
-  async attach() {
-    const ctc = this.state.acc.attach(backend, this.state.ctcInfo);
+    // These callbacks will be invoked asynchronously
     const interact = {
-      want: (amt) => {
-        // No real need to interact this.
-        // Bob is prompted by MetaMask when it's time to pay.
-        console.log(amt);
+      want: (request) => {
+        const requestStandard = reach.formatCurrency(request, 4);
+        this.setState({mode: 'DisplayInfo', requestStandard});
       },
-      got: (msgBytes) => {
-        const secret = reach.hexToString(msgBytes);
-        this.setState({secret});
+      got: (infoBytes) => {
+        const info = reach.hexToString(infoBytes);
+        this.setState({info});
       },
     };
-    const secret = 'waiting for Alice to tell';
-    this.setState({
-      ctc, secret, attached: true, running: true, completed: false,
-    });
     await backend.Bob(reach, ctc, interact);
-    this.setState({running: false, completed: true});
   }
 
   render() {
+    let bob = null;
+    switch (this.state.mode) {
+      case 'RunBackend':
+        bob = (
+          <div>
+            Alice will deploy the contract.
+            <br />
+            Ask Alice for her contract info and paste it here:
+            <br />
+            <textarea
+              onChange={(e) => this.ctcInfoStrChanged(e.currentTarget.value)}
+              placeholder='{}'
+            />
+            <br />
+            <button
+              disabled={!this.state.ctcInfoStr}
+              onClick={() => this.runBackend()}
+            >Connect</button>
+          </div>
+        );
+        break;
+      case 'ApproveRequest':
+        if (!this.state.requestStandard) {
+          bob = (
+            <p>
+              Once Alice has submitted her requested amount,
+              you will be prompted to pay it.
+            </p>
+          );
+        } else {
+          bob = (
+            <p>
+              You have received a prompt to pay Alice's requested amount.
+            </p>
+          );
+        }
+        break;
+      case 'DisplayInfo':
+        if (!this.state.info) {
+          bob = (
+            <p>
+              Waiting for Alice to reveal her secret info...
+            </p>
+          );
+        } else {
+          bob = (
+            <div>
+              <p>
+                Alice's secret info is: <strong>{this.state.info}</strong>
+              </p>
+              <p>
+                Thank you, Bob. The contract has run to completion.
+              </p>
+            </div>
+          );
+        }
+        break;
+      default:
+        bob = (
+          <div>
+            Sorry, Bob. Something went wrong.
+            Please refresh the page.
+          </div>
+        );
+    }
+
     return (
-      <div>
-        Current role: <strong>Bob</strong>.
-        <br /> Pays Alice in order for her to reveal a secret.
-        <p>
-          Paste Alice's contract info:
-          <br />
-          <textarea onChange={(e) => this.pastedInfo(e)} spellCheck='false' style={{minWidth: '750px', minHeight: '100px'}} />
-        </p>
-        <p>
-          <button
-            disabled={!this.state.ctcInfo || this.state.attached}
-            onClick={() => this.attach()}
-            style={{fontSize: '32px'}}
-          >Attach</button>
-        </p>
-        App state:
-        {!(this.state.running || this.state.completed) ? ' Waiting to attach...' : ''}
-        {this.state.running ? ' Running...' : ''}
-        {this.state.completed ? ' Completed' : ''}
-        <p>
-          Alice's secret:
-          <br />
-          <span>{this.state.secret}</span>
-        </p>
+      <div className='Bob'>
+        {bob}
       </div>
     );
   }
