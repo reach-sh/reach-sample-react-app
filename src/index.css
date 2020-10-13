@@ -30,3 +30,23 @@ code {
   color: #61dafb;
 }
 
+input[type=number] {
+  font-size: calc(10px + 2vmin);
+  width: 4em;
+}
+
+button {
+  font-size: calc(10px + 2vmin);
+}
+
+textarea {
+  font-size: calc(10px + 2vmin);
+}
+
+pre {
+  font-size: calc(10px + 1vmin);
+  text-align: left;
+  max-width: 90vw;
+  padding: 2vw;
+  overflow-x: scroll;
+}
