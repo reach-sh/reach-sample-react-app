@@ -39,4 +39,6 @@ git commit -m 'shrink the spinning logo'
 npm run compile-rsh
 git add src/index.rsh src/build/index.main.mjs
 git commit -m 'exercise some rsh opts'
+
+# condensed all of the js into src/index.js
 ```
