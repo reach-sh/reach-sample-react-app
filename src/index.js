@@ -17,6 +17,8 @@ function renderDOM() {
   );
 }
 
+const fundAmountStandardDefault = '10';
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -63,8 +65,8 @@ class App extends React.Component {
   }
 
   async fundAccount() {
-    const {faucet, acc, fundAmountStandard = '10'} = this.state;
-    const amountAtomic = reach.parseCurrency(fundAmountStandard);
+    const {faucet, acc, fundAmountStandard} = this.state;
+    const amountAtomic = reach.parseCurrency(fundAmountStandard || fundAmountStandardDefault);
     reach.transfer(faucet, acc, amountAtomic);
     this.setState({mode: 'SelectRole'});
   }
@@ -103,9 +105,8 @@ class App extends React.Component {
             <br />
             <input
               type='number'
-              onChange={(e) => {
-                this.fundAmountChanged(e.currentTarget.value);
-              }}
+              placeholder='10'
+              onChange={(e) => this.fundAmountChanged(e.currentTarget.value)}
             />
             <button onClick={() => this.fundAccount()}>Fund Account</button>
             <button onClick={() => this.skipFundAccount()}>Skip</button>
@@ -117,18 +118,16 @@ class App extends React.Component {
           <div>
             Please select a role:
             <br />
-            <button
-              onClick={() => this.selectRole(<Alice acc={this.state.acc} />)}
-            >Alice</button>
-            <button
-              onClick={() => this.selectRole(<Bob acc={this.state.acc} />)}
-            >Bob</button>
             <p>
-              <strong>Alice</strong>:
+              <button
+                onClick={() => this.selectRole(<Alice acc={this.state.acc} />)}
+              >Alice</button>
               <br /> Requests payment from Bob in order to reveal a secret.
             </p>
             <p>
-              <strong>Bob</strong>:
+              <button
+                onClick={() => this.selectRole(<Bob acc={this.state.acc} />)}
+              >Bob</button>
               <br /> Pays Alice in order for her to reveal a secret.
             </p>
           </div>
@@ -319,7 +318,7 @@ class Alice extends React.Component {
               The contract is running!
               Please give Bob the following contract info.
 
-              <pre>
+              <pre className='ContractInfo'>
                 {this.state.ctcInfoStr}
               </pre>
               <br />
@@ -411,6 +410,8 @@ class Bob extends React.Component {
             Ask Alice for her contract info and paste it here:
             <br />
             <textarea
+              className='ContractInfo'
+              spellCheck='false'
               onChange={(e) => this.ctcInfoStrChanged(e.currentTarget.value)}
               placeholder='{}'
             />
