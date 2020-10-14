@@ -2,10 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import * as AppViews from './views/AppViews';
+import * as AliceViews from './views/AliceViews';
 import * as backend from './build/index.main.mjs';
 import * as reach from '@reach-sh/stdlib/ETH';
 
-const sleep = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
+const {standardUnit} = reach;
 const defaultFundAmtStandard = '10';
 const defaultInfo = 'the cake is a lie';
 const defaultRequestStandard = '0.5';
@@ -45,221 +46,61 @@ class App extends React.Component {
   selectBob() { this.selectRole(<Bob acc={this.state.acc} />); }
   selectAlice() { this.selectRole(<Alice acc={this.state.acc} />); }
   render() {
-    const {addr, bal, role} = this.state;
-    const {standardUnit} = reach;
+    const {mode, addr, bal, role} = this.state;
     const parent = this;
     let app = null;
-    if (this.state.mode === 'ConnectAccount') {
-      const renderProps = {parent};
-      app = <AppViews.ConnectAccount renderProps={renderProps} />
-    } else if (this.state.mode === 'FundAccount') {
-      const renderProps = {parent, addr, bal, standardUnit, defaultFundAmtStandard};
-      app = <AppViews.FundAccount renderProps={renderProps} />
-    } else if (this.state.mode === 'SelectRole') {
-      const renderProps = {parent};
-      app = <AppViews.SelectRole renderProps={renderProps} />
+    if (mode === 'ConnectAccount') {
+      console.log(parent);
+      app = <AppViews.ConnectAccount />
+    } else if (mode === 'FundAccount') {
+      app = <AppViews.FundAccount {...{parent, addr, bal, standardUnit, defaultFundAmtStandard}} />
+    } else if (mode === 'SelectRole') {
+      app = <AppViews.SelectRole {...{parent}} />
     } else { // 'RunRole'
-        app = role;
+      app = role;
     }
-    return <AppViews.Wrapper app={app} />;
+    return <AppViews.Wrapper {...{app}} />;
   }
 }
-
 
 class Alice extends React.Component {
   constructor(props) {
     super(props);
-    // Modes:
-    // * Deploy: deploy
-    // * EnterInfo: enterInfo
-    // * EnterRequest: enterRequest
-    // * RunBackend: runBackend
-    // * BackendRunning: backendRan
-    // * BackendRan
-    this.state = {
-      mode: 'Deploy',
-      acc: props.acc,
-      // Set by Deploy
-      ctc: undefined,
-      // Set (async) by Deploy
-      ctcInfoStr: undefined,
-      // Set by EnterSecret
-      secret: undefined,
-      // Set by EnterAmount
-      requestStandard: undefined,
-    };
+    this.state = { mode: 'Deploy'};
   }
-
-  async deploy() {
-    const {acc} = this.state;
-    const ctc = acc.deploy(backend);
+  async deploy() { // from mode: Deploy
+    const ctc = this.props.acc.deploy(backend);
     this.setState({mode: 'EnterInfo', ctc});
-
-    // (async portion: may be delayed)
     const ctcInfoStr = JSON.stringify(await ctc.getInfo(), null, 2);
     this.setState({ctcInfoStr});
   }
-
-  infoChanged(info) {
-    this.setState({info});
-  }
-
-  enterInfo() {
-    let {info} = this.state;
-    info = info || defaultInfo;
-    this.setState({mode: 'EnterRequest', info});
-  }
-
-  requestChanged(requestStandard) {
-    this.setState({requestStandard});
-  }
-
-  enterRequest() {
-    let {requestStandard} = this.state;
-    requestStandard = requestStandard || defaultRequestStandard;
-    this.setState({mode: 'RunBackend', requestStandard});
-  }
-
-  async runBackend() {
+  enterInfo(info) { this.setState({mode: 'EnterRequest', info}); } // from mode: EnterInfo
+  enterRequest(requestStandard) { this.setState({mode: 'RunBackend', requestStandard}); } // from mode: EnterRequest
+  async runBackend() { // from mode: RunBackend
     const {ctc, requestStandard, info} = this.state;
     this.setState({mode: 'BackendRunning'});
-
-    // (async portion: may be delayed)
     const request = reach.parseCurrency(requestStandard);
-    const interact = {request, info};
-    await backend.Alice(reach, ctc, interact);
+    await backend.Alice(reach, ctc, {request, info});
     this.setState({mode: 'BackendRan'});
   }
-
-  async copyToClipborad(button) {
-    navigator.clipboard.writeText(this.state.ctcInfoStr);
-    const origInnerHTML = button.innerHTML;
-    button.innerHTML = 'Copied!';
-    button.disabled = true;
-    await sleep(1000);
-    button.innerHTML = origInnerHTML;
-    button.disabled = false;
-  }
-
   render() {
     let alice = null;
-    switch (this.state.mode) {
-      case 'Deploy':
-        alice = (
-          <div>
-            As Alice, it is your job to deploy the contract.
-            <br />
-            <button
-              onClick={() => this.deploy()}
-            >Deploy</button>
-          </div>
-        );
-        break;
-      case 'EnterInfo':
-        alice = (
-          <div>
-            Alice, what is your secret info?
-            <br />
-            <textarea
-              onChange={(e) => this.infoChanged(e.currentTarget.value)}
-              placeholder={defaultInfo}
-            />
-            <br />
-            <button onClick={() => this.enterInfo()}
-            >Submit secret info</button>
-          </div>
-        )
-        break;
-      case 'EnterRequest':
-        alice = (
-          <div>
-            Alice, how much {reach.standardUnit} should Bob pay you
-            to reveal this info?
-            <br />
-            <input
-              type='number'
-              onChange={(e) => this.requestChanged(e.currentTarget.value)}
-              placeholder={defaultRequestStandard}
-            />
-            <br />
-            <button onClick={() => this.enterRequest()}
-            >Submit request</button>
-          </div>
-        );
-        break;
-      case 'RunBackend':
-        alice = (
-          <div>
-            <p>
-              You request <strong>{this.state.requestStandard}</strong> {reach.standardUnit + ' '}
-              to reveal secret info: <strong>{this.state.info}</strong>
-            </p>
-            <p>
-              Ready to connect to the contract?
-            </p>
-            <p>
-              You will be prompted to pay for two transactions.
-              The first transaction will publish your requested amount,
-              and the second will publish your secret while simultaneously
-              retrieving the requested amount from the contract.
-            </p>
-            <button
-              onClick={() => this.runBackend()}
-            >Connect</button>
-          </div>
-        );
-        break;
-      case 'BackendRunning':
-        if (this.state.ctcInfoStr === undefined) {
-          alice = (
-            <div>
-              Waiting for the contract to deploy...
-              If this takes more than 1 min, something may be wrong.
-            </div>
-          )
-        } else {
-          alice = (
-            <div>
-              <h2>Contract Info</h2>
-              The contract is running!
-              Please give Bob the following contract info.
-
-              <pre className='ContractInfo'>
-                {this.state.ctcInfoStr}
-              </pre>
-              <br />
-              <button
-                onClick={async (e) => this.copyToClipborad(e.currentTarget)}
-              >Copy to clipboard</button>
-              <br />
-
-              You will be automatically prompted to approve the next transaction
-              once Bob has paid the requested amount into the contract.
-            </div>
-          );
-        }
-        break;
-      case 'BackendRan':
-        alice = (
-          <div>
-            Thank you, Alice.
-            The contract has run to completion.
-          </div>
-        )
-        break;
-      default:
-        alice = (
-          <div>
-            Sorry, Alice, something went wrong.
-            Please refresh the page.
-          </div>
-        );
+    const parent = this;
+    const {mode, ctcInfoStr, requestStandard, info} = this.state;
+    if (mode === 'Deploy') {
+      alice = <AliceViews.Deploy {...{parent}} />;
+    } else if (mode === 'EnterInfo') {
+      alice = <AliceViews.EnterInfo {...{parent, defaultInfo}} />;
+    } else if (mode === 'EnterRequest') {
+      alice = <AliceViews.EnterRequest {...{parent, standardUnit, defaultRequestStandard}} />;
+    } else if (mode === 'RunBackend') {
+      alice = <AliceViews.RunBackend {...{parent, info, requestStandard, standardUnit}} />;
+    } else if (mode === 'BackendRunning') {
+      alice = <AliceViews.BackendRunning {...{ctcInfoStr}} />;
+    } else { // 'BackendRan'
+      alice = <AliceViews.BackendRan />;
     }
-    return (
-      <div className="Alice">
-        {alice}
-      </div>
-    );
+    return <AliceViews.AliceWrapper {...{alice}} />
   }
 }
 
@@ -290,17 +131,9 @@ class Bob extends React.Component {
     const ctcInfo = JSON.parse(ctcInfoStr);
     const ctc = acc.attach(backend, ctcInfo);
     this.setState({mode: 'ApproveRequest'});
-
-    // These callbacks will be invoked asynchronously
     const interact = {
-      want: (request) => {
-        const requestStandard = reach.formatCurrency(request, 4);
-        this.setState({mode: 'DisplayInfo', requestStandard});
-      },
-      got: (infoBytes) => {
-        const info = reach.hexToString(infoBytes);
-        this.setState({info});
-      },
+      want: (request) => this.setState({mode: 'DisplayInfo', requestStandard: reach.formatCurrency(request, 4)}),
+      got: (infoBytes) => this.setState({info: reach.hexToString(infoBytes)}),
     };
     await backend.Bob(reach, ctc, interact);
   }

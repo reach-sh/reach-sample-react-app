@@ -2,10 +2,11 @@ import React from 'react';
 
 export class Wrapper extends React.Component {
   render() {
+    const {app} = this.props;
     return (
       <div className="App">
         <header className="App-header" id="root">
-          {this.props.app}
+          {app}
         </header>
       </div>
     );
@@ -30,7 +31,7 @@ export class FundAccount extends React.Component {
   }
 
   render() {
-    const {addr, bal, standardUnit, defaultFundAmtStandard, parent} = this.props.renderProps;
+    const {addr, bal, standardUnit, defaultFundAmtStandard, parent} = this.props;
     return (
       <div>
         <h1>Fund account</h1>
@@ -57,7 +58,7 @@ export class FundAccount extends React.Component {
 
 export class SelectRole extends React.Component {
   render() {
-    const {parent} = this.props.renderProps;
+    const {parent} = this.props;
     return (
       <div>
         Please select a role:
