@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import * as AppViews from './views/AppViews';
 import * as AliceViews from './views/AliceViews';
+import * as BobViews from './views/BobViews';
 import * as backend from './build/index.main.mjs';
 import * as reach from '@reach-sh/stdlib/ETH';
 
@@ -107,29 +108,11 @@ class Alice extends React.Component {
 class Bob extends React.Component {
   constructor(props) {
     super(props);
-    // Modes
-    // * RunBackend: runBackend
-    // * ApproveRequest
-    // * DisplayInfo
-    this.state = {
-      mode: 'RunBackend',
-      acc: props.acc,
-      // Set by RunBackend
-      ctcInfoStr: undefined,
-      // Set (async) by RunBackend
-      requestStandard: undefined,
-      info: undefined,
-    };
+    this.state = {mode: 'RunBackend'};
   }
-
-  ctcInfoStrChanged(ctcInfoStr) {
-    this.setState({ctcInfoStr});
-  }
-
-  async runBackend() {
-    const {acc, ctcInfoStr} = this.state;
+  async runBackend(ctcInfoStr) { // from mode: RunBackend
     const ctcInfo = JSON.parse(ctcInfoStr);
-    const ctc = acc.attach(backend, ctcInfo);
+    const ctc = this.props.acc.attach(backend, ctcInfo);
     this.setState({mode: 'ApproveRequest'});
     const interact = {
       want: (request) => this.setState({mode: 'DisplayInfo', requestStandard: reach.formatCurrency(request, 4)}),
@@ -137,81 +120,18 @@ class Bob extends React.Component {
     };
     await backend.Bob(reach, ctc, interact);
   }
-
   render() {
     let bob = null;
-    switch (this.state.mode) {
-      case 'RunBackend':
-        bob = (
-          <div>
-            Alice will deploy the contract.
-            <br />
-            Ask Alice for her contract info and paste it here:
-            <br />
-            <textarea
-              className='ContractInfo'
-              spellCheck='false'
-              onChange={(e) => this.ctcInfoStrChanged(e.currentTarget.value)}
-              placeholder='{}'
-            />
-            <br />
-            <button
-              disabled={!this.state.ctcInfoStr}
-              onClick={() => this.runBackend()}
-            >Connect</button>
-          </div>
-        );
-        break;
-      case 'ApproveRequest':
-        if (!this.state.requestStandard) {
-          bob = (
-            <p>
-              Once Alice has submitted her requested amount,
-              you will be prompted to pay it.
-            </p>
-          );
-        } else {
-          bob = (
-            <p>
-              You have received a prompt to pay Alice's requested amount.
-            </p>
-          );
-        }
-        break;
-      case 'DisplayInfo':
-        if (!this.state.info) {
-          bob = (
-            <p>
-              Waiting for Alice to reveal her secret info...
-            </p>
-          );
-        } else {
-          bob = (
-            <div>
-              <p>
-                Alice's secret info is: <strong>{this.state.info}</strong>
-              </p>
-              <p>
-                Thank you, Bob. The contract has run to completion.
-              </p>
-            </div>
-          );
-        }
-        break;
-      default:
-        bob = (
-          <div>
-            Sorry, Bob. Something went wrong.
-            Please refresh the page.
-          </div>
-        );
+    const parent = this;
+    const {mode, requestStandard, info} = this.state;
+    if (mode === 'RunBackend') {
+      bob = <BobViews.RunBackend {...{parent}} />
+    } else if (mode === 'ApproveRequest') {
+      bob = <BobViews.ApproveRequest {...{requestStandard}} />;
+    } else { // 'DisplayInfo'
+      bob = <BobViews.DisplayInfo {...{info}} />
     }
-
-    return (
-      <div className='Bob'>
-        {bob}
-      </div>
-    );
+    return <BobViews.BobWrapper {...{bob}} />;
   }
 }
 

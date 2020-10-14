@@ -20,6 +20,7 @@ export class Deploy extends React.Component {
 export class EnterInfo extends React.Component {
   render() {
     const {parent, defaultInfo} = this.props;
+    const {info} = this.state || {};
     return (
       <div>
         Alice, what is your secret info?
@@ -29,7 +30,7 @@ export class EnterInfo extends React.Component {
           placeholder={defaultInfo}
         />
         <br />
-        <button onClick={() => parent.enterInfo(this.state.info || defaultInfo)}
+        <button onClick={() => parent.enterInfo(info || defaultInfo)}
         >Submit secret info</button>
       </div>
     );
@@ -39,6 +40,7 @@ export class EnterInfo extends React.Component {
 export class EnterRequest extends React.Component {
   render() {
     const {parent, standardUnit, defaultRequestStandard} = this.props;
+    const {req} = this.state || {};
     return (
       <div>
         Alice, how much {standardUnit} should Bob pay you
@@ -50,7 +52,7 @@ export class EnterRequest extends React.Component {
           placeholder={defaultRequestStandard}
         />
         <br />
-        <button onClick={() => parent.enterRequest(this.state.req || defaultRequestStandard)}
+        <button onClick={() => parent.enterRequest(req || defaultRequestStandard)}
         >Submit request</button>
       </div>
     );
