@@ -1,52 +1,28 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import * as AppViews from './views/AppViews';
 import * as backend from './build/index.main.mjs';
 import * as reach from '@reach-sh/stdlib/ETH';
 
-const sleep = (milliseconds) => {
-  return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
+const sleep = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
+const defaultFundAmtStandard = '10';
+const defaultInfo = 'the cake is a lie';
+const defaultRequestStandard = '0.5';
 
 function renderDOM() {
   ReactDOM.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
+    <React.StrictMode><App /></React.StrictMode>,
     document.getElementById('root')
   );
 }
 
-const fundAmountStandardDefault = '10';
-
 class App extends React.Component {
   constructor(props) {
     super(props);
-    // Modes:
-    // * ConnectAccount: connectAccount
-    // * FundAccount: fundAccount or skipFundAccount
-    // * SelectRole: selectRole
-    // * RunRole: defined in Alice & Bob sub-components
-    this.state = {
-      mode: 'ConnectAccount',
-      // Set by ConnectAccount
-      acc: undefined,
-      addr: undefined,
-      bal: undefined,
-      // Set by FundAccount
-      fundAmountStandard: undefined,
-      // Set by SelectRole
-      role: undefined,
-    }
+    this.state = {mode: 'ConnectAccount'}
   }
-
-  componentDidMount() {
-    if (this.state.mode === 'ConnectAccount') {
-      this.connectAccount();
-    }
-  }
-
-  async connectAccount() {
+  async componentDidMount() { // from mode: ConnectAccount
     const acc = await reach.getDefaultAccount();
     const addr = await acc.networkAccount.getAddress();
     const balAtomic = await reach.balanceOf(acc);
@@ -55,110 +31,40 @@ class App extends React.Component {
       const faucet = await reach.getFaucet();
       this.setState({mode: 'FundAccount', acc, addr, bal, faucet});
     } catch (e) {
-      // Couldn't find a faucet; skip to SelectRole
       this.setState({mode: 'SelectRole', acc, addr, bal});
     }
   }
-
-  async fundAmountChanged(fundAmountStandard) {
-    this.setState({fundAmountStandard});
-  }
-
-  async fundAccount() {
-    const {faucet, acc, fundAmountStandard} = this.state;
-    const amountAtomic = reach.parseCurrency(fundAmountStandard || fundAmountStandardDefault);
+  fundAccount(fundAmountStandard) { // from mode: FundAccount
+    const {faucet, acc} = this.state;
+    const amountAtomic = reach.parseCurrency(fundAmountStandard || defaultFundAmtStandard);
     reach.transfer(faucet, acc, amountAtomic);
     this.setState({mode: 'SelectRole'});
   }
-
-  async skipFundAccount() {
-    this.setState({mode: 'SelectRole'});
-  }
-
-  async selectRole(role) {
-    this.setState({mode: 'RunRole', role});
-  }
-
+  skipFundAccount() { this.setState({mode: 'SelectRole'}); } // from mode: FundAccount
+  selectRole(role) { this.setState({mode: 'RunRole', role}); } // from mode: SelectRole
+  selectBob() { this.selectRole(<Bob acc={this.state.acc} />); }
+  selectAlice() { this.selectRole(<Alice acc={this.state.acc} />); }
   render() {
+    const {addr, bal, role} = this.state;
+    const {standardUnit} = reach;
+    const parent = this;
     let app = null;
-    switch (this.state.mode) {
-      case 'ConnectAccount':
-        app = (
-          <div>
-            Please wait while we connect to your account.
-            If this takes more than a few seconds, there may be something wrong.
-          </div>
-        );
-        break;
-      case 'FundAccount':
-        app = (
-          <div>
-            <h1>Fund account</h1>
-            <br />
-            Address: {this.state.addr}
-            <br />
-            Balance: {this.state.bal} {reach.standardUnit}
-            <hr />
-            Would you like to fund your account with additional {reach.standardUnit}?
-            <br />
-            (This only works on certain devnets)
-            <br />
-            <input
-              type='number'
-              placeholder='10'
-              onChange={(e) => this.fundAmountChanged(e.currentTarget.value)}
-            />
-            <button onClick={() => this.fundAccount()}>Fund Account</button>
-            <button onClick={() => this.skipFundAccount()}>Skip</button>
-          </div>
-        );
-        break;
-      case 'SelectRole':
-        app = (
-          <div>
-            Please select a role:
-            <br />
-            <p>
-              <button
-                onClick={() => this.selectRole(<Alice acc={this.state.acc} />)}
-              >Alice</button>
-              <br /> Requests payment from Bob in order to reveal a secret.
-            </p>
-            <p>
-              <button
-                onClick={() => this.selectRole(<Bob acc={this.state.acc} />)}
-              >Bob</button>
-              <br /> Pays Alice in order for her to reveal a secret.
-            </p>
-          </div>
-        );
-        break;
-      case 'RunRole':
-        app = this.state.role;
-        break;
-      default:
-        app = (
-          <div>
-            Sorry, something went wrong.
-            Please refresh the page.
-          </div>
-        );
-        break;
+    if (this.state.mode === 'ConnectAccount') {
+      const renderProps = {parent};
+      app = <AppViews.ConnectAccount renderProps={renderProps} />
+    } else if (this.state.mode === 'FundAccount') {
+      const renderProps = {parent, addr, bal, standardUnit, defaultFundAmtStandard};
+      app = <AppViews.FundAccount renderProps={renderProps} />
+    } else if (this.state.mode === 'SelectRole') {
+      const renderProps = {parent};
+      app = <AppViews.SelectRole renderProps={renderProps} />
+    } else { // 'RunRole'
+        app = role;
     }
-
-    return (
-      <div className="App">
-        <header className="App-header">
-          {app}
-        </header>
-      </div>
-    );
+    return <AppViews.Wrapper app={app} />;
   }
 }
 
-
-const defaultInfo = 'the cake is a lie';
-const defaultRequestStandard = '0.5';
 
 class Alice extends React.Component {
   constructor(props) {
