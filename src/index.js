@@ -51,7 +51,6 @@ class App extends React.Component {
     const parent = this;
     let app = null;
     if (mode === 'ConnectAccount') {
-      console.log(parent);
       app = <AppViews.ConnectAccount />
     } else if (mode === 'FundAccount') {
       app = <AppViews.FundAccount {...{parent, addr, bal, standardUnit, defaultFundAmtStandard}} />
