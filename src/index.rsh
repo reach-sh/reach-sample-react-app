@@ -1,4 +1,6 @@
 'reach 0.1';
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-undef */
 
 export const main =
   Reach.App(
