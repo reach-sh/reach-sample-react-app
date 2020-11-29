@@ -13,7 +13,7 @@ To see the demo in action:
 
 ```bash
 npm install   # this may take 5-15 mins to install
-npm run start # this may take a minute to comipile
+npm run start # this may take a minute to compile
 ```
 
 Open http://localhost:3000 in both Firefox and Chrome;
